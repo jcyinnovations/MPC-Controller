@@ -21,14 +21,14 @@ double dt = 0.05;
 const double Lf = 2.67;
 const double v_ref = 40;
 
-size_t x_idx = 0;
-size_t y_idx = x_idx + N;
-size_t psi_idx = y_idx + N;
-size_t v_idx = psi_idx + N;
-size_t cte_idx = v_idx + N;
-size_t epsi_idx = cte_idx + N;
-size_t delta_idx = epsi_idx + N;
-size_t a_idx = delta_idx + N - 1;
+size_t x_idx      = 0;
+size_t y_idx      = x_idx   + N;
+size_t psi_idx    = y_idx   + N;
+size_t v_idx      = psi_idx + N;
+size_t cte_idx    = v_idx   + N;
+size_t epsi_idx   = cte_idx + N;
+size_t delta_idx  = epsi_idx+ N;
+size_t a_idx      = delta_idx + N - 1;
 
 
 class FG_eval {
@@ -45,17 +45,26 @@ class FG_eval {
     // the Solver function below.
 
     fg[0] = 0;
+    /**
+     * Cost function: state errors and target velocity
+     */
     for (int t = 0; t < N; t++) {
       fg[0] += CppAD::pow(vars[cte_idx + t], 2);
       fg[0] += CppAD::pow(vars[epsi_idx + t], 2);
       fg[0] += CppAD::pow(vars[v_idx + t] - v_ref, 2);
     }
 
+    /**
+    * Cost function: minimize actuations
+    **/
     for (int t = 0; t < N-1; t++) {
       fg[0] += CppAD::pow(vars[delta_idx + t], 2);
       fg[0] += CppAD::pow(vars[a_idx + t], 2);
     }
 
+    /**
+     * Minimize difference between sequential actuations
+     **/
     for (int t = 0; t < N-2; t++) {
       fg[0] += CppAD::pow(vars[delta_idx + t + 1] - vars[delta_idx + t], 2);
       fg[0] += CppAD::pow(vars[a_idx + t + 1] - vars[a_idx + t], 2);
@@ -69,32 +78,32 @@ class FG_eval {
     fg[epsi_idx+ 1] = vars[epsi_idx];
 
     for (int t = 1; t < N; t++) {
-      AD<double> x1   = vars[x_idx + t];
-      AD<double> y1   = vars[y_idx + t];
-      AD<double> psi1 = vars[psi_idx + t];
-      AD<double> v1   = vars[v_idx + t];
-      AD<double> cte1 = vars[cte_idx + t];
+      AD<double> x1   = vars[x_idx    + t];
+      AD<double> y1   = vars[y_idx    + t];
+      AD<double> psi1 = vars[psi_idx  + t];
+      AD<double> v1   = vars[v_idx    + t];
+      AD<double> cte1 = vars[cte_idx  + t];
       AD<double> epsi1= vars[epsi_idx + t];
 
-      AD<double> x0   = vars[x_idx + t - 1];
-      AD<double> y0   = vars[y_idx + t - 1];
-      AD<double> psi0 = vars[psi_idx + t - 1];
-      AD<double> v0   = vars[v_idx + t - 1];
-      AD<double> cte0 = vars[cte_idx + t - 1];
+      AD<double> x0   = vars[x_idx    + t - 1];
+      AD<double> y0   = vars[y_idx    + t - 1];
+      AD<double> psi0 = vars[psi_idx  + t - 1];
+      AD<double> v0   = vars[v_idx    + t - 1];
+      AD<double> cte0 = vars[cte_idx  + t - 1];
       AD<double> epsi0= vars[epsi_idx + t - 1];
 
       AD<double> delta0 = vars[delta_idx + t - 1];
       AD<double> a0 = vars[a_idx + t - 1];
 
-      AD<double> f0 = coeffs[0] + coeffs[1]*x0 + coeffs[2]*CppAD::pow(x0, 2) + coeffs[3]*CppAD::pow(x0, 3);
-      AD<double> psides0 = CppAD::atan(coeffs[1] + 2*coeffs[2]*x0 + 3*coeffs[3]*CppAD::pow(x0, 2));
+      AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
+      AD<double> psides0 = CppAD::atan(coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * CppAD::pow(x0, 2));
 
       fg[1 + t + x_idx]   = x1    - (x0 + v0 * CppAD::cos(psi0) * dt);
       fg[1 + t + y_idx]   = y1    - (y0 + v0 * CppAD::sin(psi0) * dt);
-      fg[1 + t + psi_idx] = psi1  - (psi0 + v0/Lf * delta0 * dt);
+      fg[1 + t + psi_idx] = psi1  - (psi0 + (v0/Lf) * delta0 * dt);
       fg[1 + t + v_idx]   = v1    - (v0 + a0 * dt);
-      fg[1 + t + cte_idx] = cte1  - ((f0 - y0) + (v0*CppAD::sin(epsi0)*dt));
-      fg[1 + t + epsi_idx]= epsi1 - ((psi0 - psides0) + v0/Lf * delta0 * dt);
+      fg[1 + t + cte_idx] = cte1  - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
+      fg[1 + t + epsi_idx]= epsi1 - ((psi0 - psides0) + (v0/Lf) * delta0 * dt);
     }
   }
 };
@@ -110,11 +119,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   size_t i;
   typedef CPPAD_TESTVECTOR(double) Dvector;
 
-  double x = state[0];
-  double y = state[1];
-  double psi = state[2];
-  double v = state[3];
-  double cte = state[4];
+  double x    = state[0];
+  double y    = state[1];
+  double psi  = state[2];
+  double v    = state[3];
+  double cte  = state[4];
   double epsi = state[5];
 
   // TODO: Set the number of model variables (includes both states and inputs).
@@ -124,11 +133,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // 4 * 10 + 2 * 9
   int state_length = 6; //state.rows();
   int actuators = 2;
-  //size_t n_vars = N*state_length + (N - 1)*actuators;
-  size_t n_vars = N*6 + (N - 1)*2;
+  size_t n_vars = N * state_length + (N - 1) * actuators;
+  //size_t n_vars = N*6 + (N - 1)*2;
   // TODO: Set the number of constraints
-  //size_t n_constraints = N*state_length;
-  size_t n_constraints = N*6;
+  size_t n_constraints = N * state_length;
+  //size_t n_constraints = N*6;
 
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.

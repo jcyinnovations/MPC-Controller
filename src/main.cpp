@@ -96,38 +96,39 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          vector<double> waypoints_x;
-          vector<double> waypoints_y;
-
-          for (int i = 0; i < ptsx.size(); i++) {
-            double dx = ptsx[i] - px;
-            double dy = ptsy[i] - py;
-            waypoints_x.push_back(dx * cos(-psi) - dy * sin(-psi));
-            waypoints_y.push_back(dx * sin(-psi) + dy * cos(-psi));
-          }
 
           /**
-          double* ptrx = &waypoints_x[0];
-          double* ptry = &waypoints_y[0];
-          Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptrx, 6);
-          Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry, 6);
-          **/
+           * Convert waypoints from global to car coordinates
+           */
+          //vector<double> rel_ptsx;
+          //vector<double> rel_ptsy;
+          Eigen::VectorXd ptsx_eig(ptsx.size());
+          Eigen::VectorXd ptsy_eig(ptsy.size());
 
-          Eigen::VectorXd waypoints_x_eig = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(waypoints_x.data(), waypoints_x.size());
-          Eigen::VectorXd waypoints_y_eig = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(waypoints_y.data(), waypoints_y.size());
+          for (int i = 0; i < ptsx.size(); i++) {
+            double rel_x = ptsx[i] - px;
+            double rel_y = ptsy[i] - py;
+            //rel_ptsx.push_back(rel_x * cos(psi) + rel_y * sin(psi));
+            //rel_ptsy.push_back(-rel_x * sin(psi) + rel_y * cos(psi));
+            ptsx_eig(i) = rel_x * cos(psi) + rel_y * sin(psi);
+            ptsy_eig(i) = -rel_x * sin(psi) + rel_y * cos(psi);
+          }
 
-          auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
+          //Eigen::VectorXd ptsx_eig = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(rel_ptsx.data(), rel_ptsx.size());
+          //Eigen::VectorXd ptsy_eig = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(rel_ptsy.data(), rel_ptsy.size());
+
+          auto coeffs = polyfit(ptsx_eig, ptsy_eig, 3);
           double cte  = polyeval(coeffs, 0);
-          double epsi = -atan(coeffs[1]);
+          double epsi = -atan((double)coeffs[1]); //+ 2 * coeffs[2] * px + 3 * coeffs[3] * pow(px, 2)) );
 
-          double steer_value = j[1]["steering_angle"];
+          double steer_value    = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
 
           Eigen::VectorXd state(6);
-          state << px, py, psi, v, cte, epsi;
-          auto vars = mpc.Solve(state, coeffs);
-          steer_value = vars[0];
-          throttle_value = vars[1];
+          state << 0, 0, 0, v, cte, epsi;
+          auto vars     = mpc.Solve(state, coeffs);
+          steer_value   = -vars[0];
+          throttle_value= vars[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -159,7 +160,7 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-          for (double i = 0; i < 100; i += 3){
+          for (double i = 0; i < 25; i += 3){
             next_x_vals.push_back(i);
             next_y_vals.push_back(polyeval(coeffs, i));
           }
@@ -168,7 +169,9 @@ int main() {
           msgJson["next_y"] = next_y_vals;
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          //std::cout << msg << std::endl;
+          printf("CTE: %6.4f \t EPSI: %6.4f \t PSI: %6.4f STEERING: \t %6.4f \n ", cte, epsi, psi, steer_value);
+
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
@@ -178,7 +181,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          this_thread::sleep_for(chrono::milliseconds(100));
+          this_thread::sleep_for(chrono::milliseconds(1));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
