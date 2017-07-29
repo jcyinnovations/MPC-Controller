@@ -75,7 +75,7 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    cout << sdata << endl;
+    //cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -100,26 +100,20 @@ int main() {
           /**
            * Convert waypoints from global to car coordinates
            */
-          //vector<double> rel_ptsx;
-          //vector<double> rel_ptsy;
           Eigen::VectorXd ptsx_eig(ptsx.size());
           Eigen::VectorXd ptsy_eig(ptsy.size());
 
           for (int i = 0; i < ptsx.size(); i++) {
             double rel_x = ptsx[i] - px;
             double rel_y = ptsy[i] - py;
-            //rel_ptsx.push_back(rel_x * cos(psi) + rel_y * sin(psi));
-            //rel_ptsy.push_back(-rel_x * sin(psi) + rel_y * cos(psi));
             ptsx_eig(i) = rel_x * cos(psi) + rel_y * sin(psi);
             ptsy_eig(i) = -rel_x * sin(psi) + rel_y * cos(psi);
           }
 
-          //Eigen::VectorXd ptsx_eig = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(rel_ptsx.data(), rel_ptsx.size());
-          //Eigen::VectorXd ptsy_eig = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(rel_ptsy.data(), rel_ptsy.size());
-
           auto coeffs = polyfit(ptsx_eig, ptsy_eig, 3);
-          double cte  = polyeval(coeffs, 0);
-          double epsi = -atan((double)coeffs[1]); //+ 2 * coeffs[2] * px + 3 * coeffs[3] * pow(px, 2)) );
+          double cte  = polyeval(coeffs, 0); //In car coordinates, car is always at (0,0)
+          double epsi = -atan((double)coeffs[1]); //Car is at (0,0) so simplifies equation
+          //+ 2 * coeffs[2] * px + 3 * coeffs[3] * pow(px, 2)) );
 
           double steer_value    = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
@@ -170,7 +164,8 @@ int main() {
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           //std::cout << msg << std::endl;
-          printf("CTE: %6.4f \t EPSI: %6.4f \t PSI: %6.4f STEERING: \t %6.4f \n ", cte, epsi, psi, steer_value);
+          printf("%6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f \n ", 
+                 cte, epsi, psi, steer_value, throttle_value, px, py);
 
           // Latency
           // The purpose is to mimic real driving conditions where
@@ -181,7 +176,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          this_thread::sleep_for(chrono::milliseconds(1));
+          //this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {

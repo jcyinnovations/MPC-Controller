@@ -5,7 +5,7 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 25;
+size_t N = 20;
 double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
@@ -49,7 +49,7 @@ class FG_eval {
      * Cost function: state errors and target velocity
      */
     for (int t = 0; t < N; t++) {
-      fg[0] += CppAD::pow(vars[cte_idx + t], 2);
+      fg[0] += 0.05*CppAD::pow(vars[cte_idx + t], 2);
       fg[0] += CppAD::pow(vars[epsi_idx + t], 2);
       fg[0] += CppAD::pow(vars[v_idx + t] - v_ref, 2);
     }
