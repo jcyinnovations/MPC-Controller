@@ -5,11 +5,15 @@ Self-Driving Car Engineer Nanodegree Program
 
 ## Implementation Review
 
+#### State vector
+
+
 ### The Model
 
+The state update equations are as follows:
 
+The polynomial f(x) referenced in the state maps the curve of the road ahead. In this case a third degree polynomial is used (see below).
 
-#### State vector
 
 
 #### Actuators
@@ -17,9 +21,7 @@ Self-Driving Car Engineer Nanodegree Program
 
 #### Vehicle Model Update Equations
 
-$$ x_{t+1} = x_t + v_t cos(\phi_t) dt $$
 
-$$ y_{t+1} = y_t + v_t sin(\phi_t) dt $$
 
 ### Timestep Length & Elapsed Duration
 
