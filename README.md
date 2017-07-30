@@ -7,17 +7,17 @@ Self-Driving Car Engineer Nanodegree Program
 
 #### State vector
 
-[vehicle-state.png]
+![vehicle-state.png]
 
-[legend.png]
+![legend.png]
 
 ### The Model
 
 The state update equations are as follows:
-[model-update-equations.png]
+![model-update-equations.png]
 
 The polynomial f(x) referenced in the state maps the curve of the road ahead. In this case a third degree polynomial is used (see below).
-[lane-curve-equations.png]
+![lane-curve-equations.png]
 
 #### Actuators
 
