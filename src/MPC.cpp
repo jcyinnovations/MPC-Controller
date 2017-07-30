@@ -47,6 +47,7 @@ class FG_eval {
     fg[0] = 0;
     /**
      * Cost function: state errors and target velocity
+     * Reduce influence of CTE to 5% to avoid over-correction (oscillation)
      */
     for (int t = 0; t < N; t++) {
       fg[0] += 0.05*CppAD::pow(vars[cte_idx + t], 2);
@@ -242,7 +243,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // creates a 2 element double vector.
   vector<double> result;
   std::cout << "Solution: " << solution.x.size() << std::endl;
-
+  /**
+   * Use future actuation to account for actuator dynamics (100ms delay)
+   **/
   result.push_back(solution.x[delta_idx + 1]);
   result.push_back(solution.x[a_idx + 1]);
 
