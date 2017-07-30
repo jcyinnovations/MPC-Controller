@@ -7,6 +7,7 @@ Self-Driving Car Engineer Nanodegree Program
 [legend]: ./legend.png "Legend"
 [lane-curve-equations]: ./lane-curve-equations.png "Lane Curvature Polynomial"
 [cost-function]: ./cost-function.png "Cost Function"
+[legend]: ./legend.png "Legend"
 
 ## Implementation Review
 
