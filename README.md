@@ -8,6 +8,8 @@ Self-Driving Car Engineer Nanodegree Program
 [lane-curve-equations]: ./lane-curve-equations.png "Lane Curvature Polynomial"
 [cost-function]: ./cost-function.png "Cost Function"
 [legend]: ./legend.png "Legend"
+[global-to-vehicle]: ./global-to-vehicle.png "Global to Vehicle coordinate conversion"
+[car-coordinate-state-vector]: ./car-coordinate-state-vector.png "Car coordinates state vector"
 
 ## Implementation Review
 
@@ -53,6 +55,15 @@ I settled on N=10 and dt = 0.05 (50 ms). This results in a resolution equal to h
 
 ### Polynomial Fitting and MPC Processing
 
+All processing is done in vehicle coordinates. The conversion to vehicle coordinates is done using the following equations:
+
+![global-to-vehicle]
+
+This conversion is done in the main function before MPC procesing is performed. This has the effect of simplfying the state vector (since x, y and psi are now 0) as well as improving stability of the the epsi calculation (since values are now smaller so arctan() results are more stable.
+
+The new state vector is:
+
+![car-coordinate-state-vector]
 
 
 ### Handling MPC Latency
