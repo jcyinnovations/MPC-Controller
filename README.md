@@ -3,34 +3,52 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 [model]: ./model-update-equations.png "Model update equations"
-
+[vehicle-state]: ./vehicle-state.png "Vehicle State"
+[legend]: ./legend.png "Legend"
+[lane-curve-equations]: ./lane-curve-equations.png "Lane Curvature Polynomial"
+[cost-function]: ./cost-function.png "Cost Function"
 
 ## Implementation Review
 
 #### State vector
 
-![vehicle-state.png]
+![vehicle-state]
 
 ![legend.png]
 
 ### The Model
 
+The model consists of:
+* vehicle state composed on 2D postion, direction speed, and errors in lane-keeping and direction.
+* A set of vehicle dynamics equations to adjust state
+* A reference trajectory that specifies the desired path to follow
+* A derived lane tracking third-degree polynomial that specifies the path to be followed to match the reference trajectory
+* Actuators to control speed and direction
+* A cost function to identify the correct path to follow to match the reference trajectory and correct behaviour while driving
+
 The state update equations are as follows:
+
 ![model]
 
 The polynomial f(x) referenced in the state maps the curve of the road ahead. In this case a third degree polynomial is used (see below).
-![lane-curve-equations.png]
+
+![lane-curve-equations]
+
+The cost function consists of the error in direction, the difference to the refernce velocity (set to 40 mph), the magnitude of the actuators (steering and throttle), the magnitude of successive actuator changes, and the cross-track error. The effects of cross-track error on the cost was reduced to avoid over-correction (oscillation) in the final motion. The actual proportion of CTE was found through experimentation.
+
+![cost-function]
 
 #### Actuators
 
+The actuators are steering (delta) and throttle (a).
 
 #### Vehicle Model Update Equations
 
-
+![model]
 
 ### Timestep Length & Elapsed Duration
 
-
+I settled on N=10 and dt = 0.05 (50 ms). This results in a resolution equal to half the loop delay (100ms) and a set of actuations for the next 0.5 seconds of travel.
 
 ### Polynomial Fitting and MPC Processing
 
@@ -38,9 +56,15 @@ The polynomial f(x) referenced in the state maps the curve of the road ahead. In
 
 ### Handling MPC Latency
 
+The algorithm was adjusted for latency as follows:
 
+* First remove the delay from the loop and adjust the model to run smoothly several times around the track. 
+* Adjust N, dt and alpha (CTE factor) to accomplish this. The result of this was N=10, dt=0.1 and alpha=0.05.
+* At this point, the MPC model returns the first actuation of the series
+* Next add the delay back into the loop and examine its influence on the dynamics. 
+* After adding the delay, choose a future actuation (not the first in the series). The rationale is that since there is a delay in actuation, the current actuation is no longer valid. Therefore some future actuation must be use.
+* The result of this was choosing the second actuation in the series of future actuations and setting dt=0.05. The initial choice of dt=delay (100ms or 0.1), did not effect the correct behaviour.
 
-* Notes
 
 ## Dependencies
 
