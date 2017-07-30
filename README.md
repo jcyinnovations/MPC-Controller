@@ -18,6 +18,7 @@ Self-Driving Car Engineer Nanodegree Program
 #### Vehicle Model Update Equations
 
 $$ x_{t+1} = x_t + v_t cos(\phi_t) dt $$
+
 $$ y_{t+1} = y_t + v_t sin(\phi_t) dt $$
 
 ### Timestep Length & Elapsed Duration
