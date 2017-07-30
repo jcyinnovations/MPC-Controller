@@ -2,6 +2,8 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+[model]: ./model-update-equations.png "Model update equations"
+
 
 ## Implementation Review
 
@@ -14,7 +16,7 @@ Self-Driving Car Engineer Nanodegree Program
 ### The Model
 
 The state update equations are as follows:
-![model-update-equations.png]
+![model]
 
 The polynomial f(x) referenced in the state maps the curve of the road ahead. In this case a third degree polynomial is used (see below).
 ![lane-curve-equations.png]
