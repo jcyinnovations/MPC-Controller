@@ -3,7 +3,34 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
-## Notes
+## Implementation Review
+
+### The Model
+
+
+
+#### State vector
+
+
+#### Actuators
+
+
+#### Vehicle Model Update Equations
+
+$$ x_{t+1} = x_t + v_t cos(\phi_t) dt $$
+$$ y_{t+1} = y_t + v_t sin(\phi_t) dt $$
+
+### Timestep Length & Elapsed Duration
+
+
+
+### Polynomial Fitting and MPC Processing
+
+
+
+### Handling MPC Latency
+
+
 
 * Notes
 
